@@ -18,6 +18,7 @@ module.exports.pitch = function pitch(remainingRequest) {
 
   const insertCssPath = path.join(__dirname, './insertCss.js');
   let output = `
+    var md5 = require('js-md5');
     var content = require(${stringifyRequest(this, `!!${remainingRequest}`)});
     var insertCss = require(${stringifyRequest(this, `!${insertCssPath}`)});
 
@@ -25,9 +26,17 @@ module.exports.pitch = function pitch(remainingRequest) {
       content = [[module.id, content, '']];
     }
 
+    var stringifiedContent = content.toString();
+    var md5sum = md5(stringifiedContent);
+
     module.exports = content.locals || {};
-    module.exports._getCss = function() { return content.toString(); };
-    module.exports._insertCss = function(options) { return insertCss(content, options) };
+    module.exports._getCss = function() { return { md5: md5sum, content: stringifiedContent }; };
+    module.exports._insertCss = function(options) {
+      options = options || {};
+      options['md5'] = md5sum;
+
+      return insertCss.call(this, content, options);
+    };
   `;
 
   output += this.debug ? `
@@ -43,7 +52,7 @@ module.exports.pitch = function pitch(remainingRequest) {
           content = [[module.id, content, '']];
         }
 
-        removeCss = insertCss(content, { replace: true });
+        removeCss = insertCss(content, { replace: true, md5: md5sum });
       });
       module.hot.dispose(function() { removeCss(); });
     }

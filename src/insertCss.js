@@ -7,7 +7,7 @@
  * LICENSE.txt file in the root directory of this source tree.
  */
 
-const prefix = 's';
+const prefix = '';
 const inserted = {};
 
 // Base64 encoding and decoding - The "Unicode Problem"
@@ -48,9 +48,10 @@ function insertCss(styles, options) {
   }, options);
 
   const ids = [];
+
   for (let i = 0; i < styles.length; i++) {
     const [moduleId, css, media, sourceMap] = styles[i];
-    const id = `${moduleId}-${i}`;
+    const id = options.md5;
 
     ids.push(id);
 
@@ -62,8 +63,8 @@ function insertCss(styles, options) {
     }
 
     inserted[id] = 1;
-
     let elem = document.getElementById(prefix + id);
+
     let create = false;
 
     if (!elem) {
